@@ -1,0 +1,3 @@
+# The tempbuild binary is only used in the context
+# of dynamic reload in dev, as such is not tracked.
+tempbuild
