@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -10,7 +12,15 @@ import (
 // HTTP handler functions.
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprintf(w, "<h1>Test Site Home</h1>")
+	// Use OS path semantics
+	tmplPath := filepath.Join("templates", "home.html")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		panic(err) // TODO logging and error handling
+	}
+	if err = tmpl.Execute(w, nil); err != nil {
+		panic(err)
+	}
 }
 
 func contactHandler(w http.ResponseWriter, r *http.Request) {
