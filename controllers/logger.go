@@ -1,11 +1,11 @@
-package main
+package controllers
 
 import (
 	"log/slog"
 	"os"
 )
 
-func NewSlogger() *slog.Logger {
+func NewLogger() *slog.Logger {
 	logHandler := slog.NewJSONHandler(os.Stdout,
 		&slog.HandlerOptions{
 			Level:     slog.LevelDebug, // default level for logHandler

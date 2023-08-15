@@ -3,11 +3,33 @@ package views
 import (
 	"fmt"
 	"html/template"
+	"io/fs"
 	"net/http"
 )
 
 type Template struct {
 	htmlTmpl *template.Template
+}
+
+// Must wraps template methods that should not produce an error.
+func Must(t Template, err error) Template {
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+// ParseFS retrieves and parses embedded html templates.
+func ParseFS(fs fs.FS, pattern string) (Template, error) {
+	tmpl, err := template.ParseFS(fs, pattern)
+	if err != nil {
+		return Template{}, fmt.Errorf("parsefs template: %v", err)
+	}
+
+	return Template{
+		htmlTmpl: tmpl,
+	}, nil
+
 }
 
 func Parse(filepath string) (Template, error) {
