@@ -2,28 +2,27 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net/http"
 	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/simon-lentz/webapp/views"
 )
 
 var log = NewSlogger()
 
 // HTML template http handler function.
-func executeTemplate(w http.ResponseWriter, tmplName string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl, err := template.ParseFiles(tmplName)
+func executeTemplate(w http.ResponseWriter, filepath string) {
+	t, err := views.Parse(filepath)
 	if err != nil {
-		log.Debug("Failed to parse html template.", slog.Any("err", err))
-		http.Error(w, "Failed to parse html template.", http.StatusInternalServerError)
-
+		log.Debug("Failed to parse template.", slog.Any("err", err))
+		http.Error(w, "Failed to parse template.", http.StatusInternalServerError)
+		return
 	}
-	if err = tmpl.Execute(w, nil); err != nil {
-		log.Debug("Failed to execute html template.", slog.Any("err", err))
-		http.Error(w, "Failed to execute html template.", http.StatusInternalServerError)
+	if err = t.Execute(w, nil); err != nil {
+		log.Debug("Failed to execute template.", slog.Any("err", err))
+		http.Error(w, "Failed to execute template.", http.StatusInternalServerError)
 	}
 }
 
