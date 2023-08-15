@@ -1,10 +1,11 @@
+{{template "header" .}}
 <h1>About</h1>
-
 <ul>
     {{range .}}
     {{template "qa" .}}
     {{end}}
 </ul>
+{{template "footer" .}}
 
 {{define "qa"}}
 <li>
