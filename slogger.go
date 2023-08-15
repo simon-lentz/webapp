@@ -5,10 +5,16 @@ import (
 	"os"
 )
 
-func init() {
-	handler := slog.NewTextHandler(os.Stdout, nil)
-	logger := slog.New(handler)
+func NewSlogger() *slog.Logger {
+	logHandler := slog.NewJSONHandler(os.Stdout,
+		&slog.HandlerOptions{
+			Level:     slog.LevelDebug, // default level for logHandler
+			AddSource: true,            // log origin
+		})
+
+	logger := slog.New(logHandler)
+
 	slog.SetDefault(logger)
 
-	slog.Info("Info msg goes here", "key", "value")
+	return logger
 }
