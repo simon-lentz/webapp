@@ -19,7 +19,7 @@ func main() {
 	r.Get("/", controllers.StaticHandler(
 		views.Must(views.ParseFS(templates.FS, "home.html"))))
 
-	r.Get("/about", controllers.StaticHandler(
+	r.Get("/about", controllers.About(
 		views.Must(views.ParseFS(templates.FS, "about.html"))))
 
 	r.Get("/contact", controllers.StaticHandler(

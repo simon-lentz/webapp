@@ -20,8 +20,8 @@ func Must(t Template, err error) Template {
 }
 
 // ParseFS retrieves and parses embedded html templates.
-func ParseFS(fs fs.FS, pattern string) (Template, error) {
-	tmpl, err := template.ParseFS(fs, pattern)
+func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
+	tmpl, err := template.ParseFS(fs, patterns...) // Expand variadic parameter.
 	if err != nil {
 		return Template{}, fmt.Errorf("parsefs template: %v", err)
 	}
@@ -29,9 +29,9 @@ func ParseFS(fs fs.FS, pattern string) (Template, error) {
 	return Template{
 		htmlTmpl: tmpl,
 	}, nil
-
 }
 
+/*
 func Parse(filepath string) (Template, error) {
 	tmpl, err := template.ParseFiles(filepath)
 	if err != nil {
@@ -41,6 +41,7 @@ func Parse(filepath string) (Template, error) {
 		htmlTmpl: tmpl,
 	}, nil
 }
+*/
 
 func (t Template) Execute(w http.ResponseWriter, data interface{}) error {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
