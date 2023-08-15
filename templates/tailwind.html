@@ -7,6 +7,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
+  <header class="bg-gradient-to-r from-blue-400 to-indigo-400">
+    <nav class="px-8 py-3 flex items-center">
+      <div class="flex-grow">
+        <a class="pr-8 text-md font-semibold hover:text-gray-200" href="/">Home</a>
+        <a class="pr-8 text-md font-semibold hover:text-gray-200" href="/about">About</a>
+        <a class="pr-8 text-md font-semibold hover:text-gray-200" href="/contact">Contact</a>
+      </div>
+      <div>
+        <a class="pr-4 text-md font-semibold hover:text-gray-200" href="#">Sign In</a>
+        <a class="text-md font-semibold hover:text-gray-200" href="#">Sign Up</a>
+      </div>
+    </nav>
+  </header>
 {{end}}
 <!-- Each page's content goes here. -->    
 {{define "footer"}}
