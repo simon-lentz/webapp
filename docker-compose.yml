@@ -19,5 +19,6 @@ services:
     environment:
       ADMINER_DESIGN: dracula
       # localhost:3333 opens the dracula themed gui
+      # CLI: docker compose exec -it db psql -U temp -d webapp
     ports:
       - 3333:8080
