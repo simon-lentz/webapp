@@ -34,17 +34,12 @@ func main() {
 			"contact.html", "tailwind.html",
 		))))
 
-	r.Get("/signup", controllers.StaticHandler(
-		views.Must(views.ParseFS(
-			templates.FS,
-			"signup.html", "tailwind.html",
-		))))
-
-	r.Get("/signin", controllers.StaticHandler(
-		views.Must(views.ParseFS(
-			templates.FS,
-			"signin.html", "tailwind.html",
-		))))
+	usersC := controllers.Users{} // Using field name assignments rather than nested structs for clarity.
+	usersC.Templates.New = views.Must(views.ParseFS(
+		templates.FS,
+		"signup.html", "tailwind.html",
+	))
+	r.Get("/signup", usersC.New)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
