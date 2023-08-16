@@ -3,19 +3,17 @@ package controllers
 import (
 	"html/template"
 	"net/http"
-
-	"github.com/simon-lentz/webapp/views"
 )
 
 // StaticHandler generates a handler for an html template.
-func StaticHandler(tmpl views.Template) http.HandlerFunc {
+func StaticHandler(tmpl Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// closure with tmpl
-		_ = tmpl.Execute(w, nil)
+		tmpl.Execute(w, nil)
 	}
 }
 
-func About(tmpl views.Template) http.HandlerFunc {
+func About(tmpl Template) http.HandlerFunc {
 	questions := []struct {
 		Question string
 		Answer   template.HTML // Hardcoded HTML does not need to be escaped.
@@ -29,6 +27,6 @@ func About(tmpl views.Template) http.HandlerFunc {
 		},
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		_ = tmpl.Execute(w, questions)
+		tmpl.Execute(w, questions)
 	}
 }

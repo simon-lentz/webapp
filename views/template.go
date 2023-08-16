@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -23,7 +22,7 @@ func Must(t Template, err error) Template {
 func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 	tmpl, err := template.ParseFS(fs, patterns...) // Expand variadic parameter.
 	if err != nil {
-		return Template{}, fmt.Errorf("parsefs template: %v", err)
+		return Template{}, err
 	}
 
 	return Template{
@@ -43,10 +42,7 @@ func Parse(filepath string) (Template, error) {
 }
 */
 
-func (t Template) Execute(w http.ResponseWriter, data interface{}) error {
+func (t Template) Execute(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := t.htmlTmpl.Execute(w, data); err != nil {
-		return fmt.Errorf("executing template: %v", err)
-	}
-	return nil
+	_ = t.htmlTmpl.Execute(w, data) // Removed error checking to make it match the controllers.Template interface
 }
