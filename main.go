@@ -34,12 +34,14 @@ func main() {
 			"contact.html", "tailwind.html",
 		))))
 
+	// Routing for rendering and parsing signup forms.
 	usersC := controllers.Users{} // Using field name assignments rather than nested structs for clarity.
 	usersC.Templates.New = views.Must(views.ParseFS(
 		templates.FS,
 		"signup.html", "tailwind.html",
 	))
 	r.Get("/signup", usersC.New)
+	r.Post("/users", usersC.Create)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
