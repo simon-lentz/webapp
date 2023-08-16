@@ -46,6 +46,16 @@ func (us *UserService) Create(email, password string) (*User, error) {
 		PasswordHash: passwordHash,
 	}
 
+	_, err = us.DB.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		email TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL
+		);`)
+	if err != nil {
+		panic(err)
+	}
+
 	row := us.DB.QueryRow(`
 		INSERT INTO users (email, password_hash)
 		VALUES ($1, $2) RETURNING id;`, email, passwordHash)

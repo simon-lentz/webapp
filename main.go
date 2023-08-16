@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/simon-lentz/webapp/controllers"
 	"github.com/simon-lentz/webapp/models"
 	"github.com/simon-lentz/webapp/templates"
@@ -46,7 +47,7 @@ func main() {
 		DB: db,
 	}
 	usersC := controllers.Users{
-		UserService: &userService, // TODO set this up.
+		UserService: &userService,
 	}
 	usersC.Templates.New = views.Must(views.ParseFS(
 		templates.FS,
