@@ -47,6 +47,7 @@ func main() {
 	))
 	r.Get("/signin", usersCon.SignIn)
 	r.Post("/signin", usersCon.ProcessSignIn)
+	r.Post("/signout", usersCon.ProcessSignOut)
 	r.Get("/users/me", usersCon.CurrentUser) // For current user ONLY, otherwise will be /:id
 
 	r.Get("/", controllers.StaticHandler(

@@ -25,6 +25,10 @@
           >
         </div>
         <div>
+          <form action="/signout" method="POST" class="inline pr-4">
+            <div class="hidden">{{csrfField}}</div>
+            <button type="submit">Sign Out</button>
+          </form>
           <a
             class="pr-4 text-md font-semibold hover:text-gray-200"
             href="/signin"

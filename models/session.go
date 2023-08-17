@@ -69,8 +69,38 @@ func (ss *SessionService) Create(userID uint) (*Session, error) {
 }
 
 func (ss *SessionService) User(token string) (*User, error) {
+	var user User
+	var userID int
 
-	return nil, nil
+	tokenHash := ss.hash(token)
+
+	row := ss.DB.QueryRow(`
+		SELECT user_id 
+		FROM sessions 
+		WHERE token_hash = $1;`, tokenHash)
+	if err := row.Scan(&userID); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
+
+	row = ss.DB.QueryRow(`
+		SELECT email, password_hash
+		FROM users
+		WHERE id = $1`, userID)
+	if err := row.Scan(&user.Email, &user.PasswordHash); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
+	return &user, nil
+}
+
+func (ss *SessionService) Delete(token string) error {
+	tokenHash := ss.hash(token)
+	if _, err := ss.DB.Exec(`
+		DELETE FROM sessions
+		WHERE token_hash = $1`, tokenHash); err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+
+	return nil
 }
 
 func (ss *SessionService) hash(token string) string {
