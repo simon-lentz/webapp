@@ -9,7 +9,7 @@ import (
 func StaticHandler(tmpl Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// closure with tmpl
-		tmpl.Execute(w, nil)
+		tmpl.Execute(w, r, nil)
 	}
 }
 
@@ -27,6 +27,6 @@ func About(tmpl Template) http.HandlerFunc {
 		},
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		tmpl.Execute(w, questions)
+		tmpl.Execute(w, r, questions)
 	}
 }
