@@ -5,6 +5,7 @@
       Create Account!
     </h1>
     <form action="/users" method="POST">
+      <div class="hidden">{{.CSRFField}}</div>
       <div class="py-2">
         <label for="email" class="text-small font-semibold"
           >Email Address</label

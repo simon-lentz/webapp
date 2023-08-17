@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// Add an os exec command to log stdout to jq and write a log-TIMESTAMP.json file.
 func NewLogger() *slog.Logger {
 	logHandler := slog.NewJSONHandler(os.Stdout,
 		&slog.HandlerOptions{
@@ -18,3 +19,5 @@ func NewLogger() *slog.Logger {
 
 	return logger
 }
+
+// TODO: implement structured logging and error handling.

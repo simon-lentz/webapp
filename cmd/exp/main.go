@@ -87,3 +87,11 @@ func main() {
 	}
 	fmt.Printf("User Info: name=%s, email=%s\n", name, email)
 }
+
+// func TimerMiddleware(h http.HandlerFunc) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		start := time.Now()
+// 		h(w, r)
+// 		fmt.Println("Request time:", time.Since(start))
+// 	}
+// }
