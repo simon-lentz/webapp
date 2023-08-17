@@ -1,3 +1,4 @@
-# The tempbuild binary is only used in the context
-# of dynamic reload in dev, as such is not tracked.
+# Dev binary
 tempbuild
+# Env variables
+.env
