@@ -20,12 +20,10 @@ func main() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, favoriteColorKey, "blue")
 	value := ctx.Value(favoriteColorKey)
-	fmt.Println(value)
 
-	// Without the custom type...
-	// We set the color
-	ctx = context.WithValue(ctx, "favorite-color", "blue")
-	// Another package sets a color, overwriting our favorite color.
-	ctx = context.WithValue(ctx, "favorite-color", "red")
-	fmt.Println(ctx)
+	_, ok := value.(int)
+	if !ok {
+		fmt.Println("Unexpected underlying type!")
+		return
+	}
 }
