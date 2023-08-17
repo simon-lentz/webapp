@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/csrf"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/simon-lentz/webapp/controllers"
+	"github.com/simon-lentz/webapp/migrations"
 	"github.com/simon-lentz/webapp/models"
 	"github.com/simon-lentz/webapp/templates"
 	"github.com/simon-lentz/webapp/views"
@@ -25,7 +26,7 @@ func main() {
 	}
 	defer db.Close()
 
-	if err = models.Migrate(db, "migrations"); err != nil {
+	if err = models.MigrateFS(db, migrations.FS, "."); err != nil {
 		panic(err)
 	}
 
