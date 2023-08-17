@@ -74,11 +74,15 @@ func main() {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 	})
 
-	fmt.Println("Starting server on :3000...")
+	umw := controllers.UserMiddleware{
+		SessionService: &sessionService,
+	}
 
 	csrfKey := "aInWh37hwuGH5JK8ga1fqjbLhgfANH3Q"
 	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false)) // Fix before deploying.
-	if err := http.ListenAndServe(":3000", csrfMw(r)); err != nil {
+
+	fmt.Println("Starting server on :3000...")
+	if err := http.ListenAndServe(":3000", csrfMw(umw.SetUser(r))); err != nil {
 		log.Debug("http.ListenAndServe failed", slog.Any("err", err))
 	}
 }
