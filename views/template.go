@@ -10,6 +10,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/csrf"
+	"github.com/simon-lentz/webapp/context"
+	"github.com/simon-lentz/webapp/models"
 )
 
 type Template struct {
@@ -33,6 +35,9 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 			"csrfField": func() (template.HTML, error) {
 				return `<input type="hidden" />`, fmt.Errorf("csrf function not implemented.")
 			},
+			"currentUser": func() (template.HTML, error) {
+				return "", fmt.Errorf("currentUser not implemented")
+			},
 		},
 	)
 
@@ -46,18 +51,6 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 	}, nil
 }
 
-/*
-func Parse(filepath string) (Template, error) {
-	tmpl, err := template.ParseFiles(filepath)
-	if err != nil {
-		return Template{}, fmt.Errorf("parsing template: %v", err)
-	}
-	return Template{
-		htmlTmpl: tmpl,
-	}, nil
-}
-*/
-
 func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}) {
 	tmpl, err := t.htmlTmpl.Clone() // Prevents race resulting in overwriting of csrf field caused by multiple requests pointing to same template.
 	if err != nil {
@@ -70,6 +63,9 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 		template.FuncMap{
 			"csrfField": func() template.HTML {
 				return csrf.TemplateField(r)
+			},
+			"currentUser": func() *models.User {
+				return context.User(r.Context())
 			},
 		},
 	)

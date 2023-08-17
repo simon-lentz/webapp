@@ -84,10 +84,13 @@ func main() {
 	r.Get("/signin", usersCon.SignIn)
 	r.Post("/signin", usersCon.ProcessSignIn)
 	r.Post("/signout", usersCon.ProcessSignOut)
-	r.Get("/users/me", usersCon.CurrentUser) // For current user ONLY, otherwise will be /:id
 	r.Get("/", homeCon)
 	r.Get("/about", aboutCon)
 	r.Get("/contact", contactCon)
+	r.Route("/users/me", func(r chi.Router) { // Subroute that requires user to be signed in.
+		r.Use(umw.RequireUser)
+		r.Get("/", usersCon.CurrentUser)
+	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 	})
