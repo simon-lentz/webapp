@@ -1,29 +1,24 @@
 package main
 
 import (
-	"context"
+	stdctx "context"
 	"fmt"
-)
 
-type ctxKey string
-
-const (
-	favoriteColorKey ctxKey = "favorite-color"
+	"github.com/simon-lentz/webapp/context"
+	"github.com/simon-lentz/webapp/models"
 )
 
 func main() {
-	// Using an unexported custom type rather than a
-	// builtin as a context key is important because
-	// if multiple packages are accessing the context
-	// the key could be overwritten. The custom type
-	// helps to prevent this.
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, favoriteColorKey, "blue")
-	value := ctx.Value(favoriteColorKey)
+	ctx := stdctx.Background()
 
-	_, ok := value.(int)
-	if !ok {
-		fmt.Println("Unexpected underlying type!")
-		return
+	user := models.User{
+		Email: "test@testing.com",
 	}
+
+	ctx = context.WithUser(ctx, &user)
+
+	retrievedUser := context.User(ctx)
+
+	fmt.Println(retrievedUser.Email)
+
 }
