@@ -130,3 +130,14 @@ func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
 
 	})
 }
+
+func (umw UserMiddleware) RequireUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := context.User(r.Context())
+		if user == nil {
+			http.Redirect(w, r, "/signin", http.StatusFound)
+			return // TODO: add alert for user.
+		}
+		next.ServeHTTP(w, r)
+	})
+}

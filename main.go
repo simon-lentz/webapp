@@ -18,8 +18,9 @@ import (
 func main() {
 	log := controllers.NewLogger()
 
-	r := chi.NewRouter()
+	// Set up DB.
 	cfg := models.DefaultPostgresConfig()
+	fmt.Println(cfg.String())
 	db, err := models.Open(cfg)
 	if err != nil {
 		panic(err)
@@ -30,12 +31,23 @@ func main() {
 		panic(err)
 	}
 
+	// Set up services.
 	userService := models.UserService{
 		DB: db,
 	}
 	sessionService := models.SessionService{
 		DB: db,
 	}
+
+	// Set up middleware.
+	umw := controllers.UserMiddleware{
+		SessionService: &sessionService,
+	}
+
+	csrfKey := "aInWh37hwuGH5JK8ga1fqjbLhgfANH3Q"
+	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false)) // Fix before deploying.
+
+	// Set up controllers.
 	usersCon := controllers.Users{
 		UserService:    &userService,
 		SessionService: &sessionService,
@@ -44,45 +56,45 @@ func main() {
 		templates.FS,
 		"signup.html", "tailwind.html",
 	))
-	r.Get("/signup", usersCon.New)
-	r.Post("/users", usersCon.Create)
 	usersCon.Templates.SignIn = views.Must(views.ParseFS(
 		templates.FS,
 		"signin.html", "tailwind.html",
 	))
+	homeCon := controllers.StaticHandler(
+		views.Must(views.ParseFS(
+			templates.FS,
+			"home.html", "tailwind.html",
+		)))
+	aboutCon := controllers.About(
+		views.Must(views.ParseFS(
+			templates.FS,
+			"about.html", "tailwind.html",
+		)))
+	contactCon := controllers.StaticHandler(
+		views.Must(views.ParseFS(
+			templates.FS,
+			"contact.html", "tailwind.html",
+		)))
+
+	// Set up router and routes.
+	r := chi.NewRouter()
+	r.Use(csrfMw, umw.SetUser)
+	r.Get("/signup", usersCon.New)
+	r.Post("/users", usersCon.Create)
 	r.Get("/signin", usersCon.SignIn)
 	r.Post("/signin", usersCon.ProcessSignIn)
 	r.Post("/signout", usersCon.ProcessSignOut)
 	r.Get("/users/me", usersCon.CurrentUser) // For current user ONLY, otherwise will be /:id
-
-	r.Get("/", controllers.StaticHandler(
-		views.Must(views.ParseFS(
-			templates.FS,
-			"home.html", "tailwind.html",
-		))))
-	r.Get("/about", controllers.About(
-		views.Must(views.ParseFS(
-			templates.FS,
-			"about.html", "tailwind.html",
-		))))
-	r.Get("/contact", controllers.StaticHandler(
-		views.Must(views.ParseFS(
-			templates.FS,
-			"contact.html", "tailwind.html",
-		))))
+	r.Get("/", homeCon)
+	r.Get("/about", aboutCon)
+	r.Get("/contact", contactCon)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 	})
 
-	umw := controllers.UserMiddleware{
-		SessionService: &sessionService,
-	}
-
-	csrfKey := "aInWh37hwuGH5JK8ga1fqjbLhgfANH3Q"
-	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false)) // Fix before deploying.
-
+	// Start server.
 	fmt.Println("Starting server on :3000...")
-	if err := http.ListenAndServe(":3000", csrfMw(umw.SetUser(r))); err != nil {
+	if err := http.ListenAndServe(":3000", r); err != nil {
 		log.Debug("http.ListenAndServe failed", slog.Any("err", err))
 	}
 }
