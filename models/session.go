@@ -1,10 +1,20 @@
 package models
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+
+	"github.com/simon-lentz/webapp/rand"
+)
+
+const (
+	// Minimum bytes used to create each session token.
+	MinBytesPerToken = 32
+)
 
 type Session struct {
-	ID     int
-	UserID int
+	ID     uint
+	UserID uint
 	// The token field is only set when creating a new session.
 	// For a session lookup the field will be empty, only the
 	// TokenHash field persists. This heads off a raw token leak.
@@ -14,11 +24,29 @@ type Session struct {
 
 type SessionService struct {
 	DB *sql.DB
+	// BytesPerToken is used to determine how many bytes to
+	// use when generating each session token. If this value is not
+	// set or set to less than the MinBytesPerToken const it will
+	// be replaced with MinBytesPerToken.
+	BytesPerToken int
 }
 
-func (ss *SessionService) Create(userID int) (*Session, error) {
-	// create session token
-	return nil, nil
+func (ss *SessionService) Create(userID uint) (*Session, error) {
+	bytesPerToken := ss.BytesPerToken
+	if bytesPerToken < MinBytesPerToken {
+		bytesPerToken = MinBytesPerToken
+	}
+	token, err := rand.String(bytesPerToken)
+	if err != nil {
+		return nil, fmt.Errorf("create: %w", err)
+	}
+
+	session := Session{
+		UserID: userID,
+		Token:  token,
+	}
+
+	return &session, nil
 }
 
 func (ss *SessionService) User(token string) (*User, error) {

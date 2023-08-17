@@ -25,6 +25,30 @@ func main() {
 	}
 	defer db.Close()
 
+	userService := models.UserService{
+		DB: db,
+	}
+	sessionService := models.SessionService{
+		DB: db,
+	}
+	usersCon := controllers.Users{
+		UserService:    &userService,
+		SessionService: &sessionService,
+	}
+	usersCon.Templates.New = views.Must(views.ParseFS(
+		templates.FS,
+		"signup.html", "tailwind.html",
+	))
+	r.Get("/signup", usersCon.New)
+	r.Post("/users", usersCon.Create)
+	usersCon.Templates.SignIn = views.Must(views.ParseFS(
+		templates.FS,
+		"signin.html", "tailwind.html",
+	))
+	r.Get("/signin", usersCon.SignIn)
+	r.Post("/signin", usersCon.ProcessSignIn)
+	r.Get("/users/me", usersCon.CurrentUser) // For current user ONLY, otherwise will be /:id
+
 	r.Get("/", controllers.StaticHandler(
 		views.Must(views.ParseFS(
 			templates.FS,
@@ -40,30 +64,6 @@ func main() {
 			templates.FS,
 			"contact.html", "tailwind.html",
 		))))
-
-	userService := models.UserService{
-		DB: db,
-	}
-	usersC := controllers.Users{
-		UserService: &userService,
-	}
-
-	usersC.Templates.New = views.Must(views.ParseFS(
-		templates.FS,
-		"signup.html", "tailwind.html",
-	))
-	r.Get("/signup", usersC.New)
-	r.Post("/users", usersC.Create)
-
-	usersC.Templates.SignIn = views.Must(views.ParseFS(
-		templates.FS,
-		"signin.html", "tailwind.html",
-	))
-	r.Get("/signin", usersC.SignIn)
-	r.Post("/signin", usersC.ProcessSignIn)
-
-	r.Get("/users/me", usersC.CurrentUser) // For current user ONLY, otherwise will be /:id
-
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 	})
