@@ -9,7 +9,8 @@ import (
 
 type Users struct {
 	Templates struct {
-		New Template // This interfaces takes the place of views.Template
+		New    Template // This interfaces takes the place of views.Template
+		SignIn Template // SignIn contains logic for an existing user.
 	}
 	UserService *models.UserService
 }
@@ -33,5 +34,14 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "User Created: +%v", user)
+	fmt.Fprintf(w, "User Created: %+v", user)
+}
+
+// SignIn is the handler func for the /signin route.
+func (u Users) SignIn(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	u.Templates.SignIn.Execute(w, data)
 }
