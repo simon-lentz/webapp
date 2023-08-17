@@ -1,8 +1,10 @@
 package views
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -63,6 +65,7 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 		http.Error(w, "There was an error rendering the page.", http.StatusInternalServerError)
 		return
 	}
+
 	tmpl = tmpl.Funcs(
 		template.FuncMap{
 			"csrfField": func() template.HTML {
@@ -72,9 +75,14 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 	)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err = tmpl.Execute(w, data); err != nil {
+	var buf bytes.Buffer // Buffer for potential template function error.
+	if err = tmpl.Execute(&buf, data); err != nil {
 		log.Printf("execute: %v", err)
 		http.Error(w, "There was an error executing the template.", http.StatusInternalServerError)
+		return
+	}
+	if _, err = io.Copy(w, &buf); err != nil {
+		log.Printf("copy buffer: %v", err)
 		return
 	}
 }
