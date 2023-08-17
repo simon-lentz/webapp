@@ -19,18 +19,6 @@ type UserService struct {
 	DB *sql.DB
 }
 
-/*
-type NewUser struct {
-	Email    string
-	Password string
-}
-
-func (us *UserService) Create(nu NewUser) (*User, error) {
-	//
-	return &User{}, nil
-}
-*/
-
 func (us *UserService) Create(email, password string) (*User, error) {
 	email = strings.ToLower(email)
 
