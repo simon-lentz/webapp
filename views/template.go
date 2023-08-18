@@ -2,7 +2,6 @@ package views
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -12,12 +11,9 @@ import (
 
 	"github.com/gorilla/csrf"
 	"github.com/simon-lentz/webapp/context"
+	"github.com/simon-lentz/webapp/errors"
 	"github.com/simon-lentz/webapp/models"
 )
-
-type public interface {
-	Public() string
-}
 
 type Template struct {
 	htmlTmpl *template.Template
@@ -99,7 +95,7 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 func errMessages(errs ...error) []string {
 	var msgs []string
 	for _, err := range errs {
-		var pubErr public
+		var pubErr errors.PublicError
 		if errors.As(err, &pubErr) {
 			msgs = append(msgs, pubErr.Public())
 		} else {

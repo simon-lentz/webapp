@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/simon-lentz/webapp/context"
+	"github.com/simon-lentz/webapp/errors"
 	"github.com/simon-lentz/webapp/models"
 )
 
@@ -41,6 +42,9 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 	data.Password = r.FormValue("password")
 	user, err := u.UserService.Create(data.Email, data.Password)
 	if err != nil {
+		if errors.Is(err, models.ErrEmailTaken) {
+			err = errors.Public(err, "That email address is already associated with an account.")
+		}
 		u.Templates.SignUp.Execute(w, r, data, err)
 		return
 	}
