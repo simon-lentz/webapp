@@ -98,7 +98,10 @@ func main() {
 		SessionService: sessionService,
 	}
 
-	csrfMw := csrf.Protect([]byte(cfg.CSRF.Key), csrf.Secure(cfg.CSRF.Secure)) // Fix before deploying.
+	csrfMw := csrf.Protect(
+		[]byte(cfg.CSRF.Key),
+		csrf.Secure(cfg.CSRF.Secure),
+		csrf.Path("/"))
 
 	// Set up controller handler functions.
 	homeCon := controllers.StaticHandler(
@@ -163,7 +166,13 @@ func main() {
 		r.Use(umw.RequireUser)
 		r.Get("/", usersCon.CurrentUser)
 	})
-	r.Get("/galleries/new", galleriesCon.New)
+	r.Route("/galleries", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(umw.RequireUser)
+			r.Get("/new", galleriesCon.New)
+		})
+	})
+
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 	})
