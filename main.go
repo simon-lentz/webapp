@@ -166,10 +166,11 @@ func main() {
 		r.Use(umw.RequireUser)
 		r.Get("/", usersCon.CurrentUser)
 	})
-	r.Route("/galleries", func(r chi.Router) {
+	r.Route("/galleries", func(r chi.Router) { // Must be signed in to access the gallery functionality.
 		r.Group(func(r chi.Router) {
 			r.Use(umw.RequireUser)
 			r.Get("/new", galleriesCon.New)
+			r.Post("/", galleriesCon.Create)
 		})
 	})
 
