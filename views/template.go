@@ -39,11 +39,7 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 				return "", fmt.Errorf("currentUser not implemented")
 			},
 			"errors": func() []string {
-				return []string{
-					"Invalid Input!",
-					"That email dress is already associated with an account!",
-					"Something went wrong.",
-				}
+				return nil
 			},
 		},
 	)
@@ -58,7 +54,7 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 	}, nil
 }
 
-func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}) {
+func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}, errs ...error) {
 	tmpl, err := t.htmlTmpl.Clone() // Prevents race resulting in overwriting of csrf field caused by multiple requests pointing to same template.
 	if err != nil {
 		log.Printf("cloning template: %v", err)
@@ -73,6 +69,13 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 			},
 			"currentUser": func() *models.User {
 				return context.User(r.Context())
+			},
+			"errors": func() []string {
+				var errMessages []string
+				for _, err := range errs {
+					errMessages = append(errMessages, err.Error())
+				}
+				return errMessages
 			},
 		},
 	)
