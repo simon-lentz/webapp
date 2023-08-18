@@ -149,6 +149,10 @@ func main() {
 		templates.FS,
 		"galleries/edit.html", "tailwind.html",
 	))
+	galleriesCon.Templates.Index = views.Must(views.ParseFS(
+		templates.FS,
+		"galleries/index.html", "tailwind.html",
+	))
 
 	// Set up router, associate routes with their respective handler functions.
 	r := chi.NewRouter()
@@ -173,9 +177,11 @@ func main() {
 	r.Route("/galleries", func(r chi.Router) { // Must be signed in to access the gallery functionality.
 		r.Group(func(r chi.Router) {
 			r.Use(umw.RequireUser)
+			r.Get("/", galleriesCon.Index)
 			r.Get("/new", galleriesCon.New)
 			r.Get("/{id}/edit", galleriesCon.Edit)
 			r.Post("/", galleriesCon.Create)
+			r.Post("/{id}", galleriesCon.Update)
 		})
 	})
 

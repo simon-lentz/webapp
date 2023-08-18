@@ -14,7 +14,7 @@
   <body class="min-h-screen bg-gray-100">
     <header class="bg-gradient-to-r from-blue-400 to-indigo-400">
       <nav class="px-8 py-3 flex items-center">
-        <div class="flex-grow">
+        <div class="flex">
           <a class="pr-8 text-md font-semibold hover:text-gray-200" href="/"
             >Home</a
           >
@@ -29,6 +29,18 @@
             >Contact</a
           >
         </div>
+        {{if currentUser}}
+        <div class="flex-grow flex flex-row-reverse">
+          <a
+            class="pr-8 text-md font-semibold hover:text-gray-200"
+            href="/galleries"
+            >My Galleries</a
+          >
+        </div>
+
+        {{else}}
+        <div class="flex-grow"></div>
+        {{end}}
         <div>
           {{if currentUser}}
           <form action="/signout" method="POST" class="inline pr-4">
