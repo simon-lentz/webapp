@@ -44,8 +44,8 @@ type EmailService struct {
 
 func (es *EmailService) Send(email Email) error {
 	msg := mail.NewMessage()
-	msg.SetHeader("To", email.To)
 	es.setFrom(msg, email)
+	msg.SetHeader("To", email.To)
 	msg.SetHeader("Subject", email.Subject)
 	switch {
 	case email.Plaintext != "" && email.HTML != "":

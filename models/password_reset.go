@@ -17,8 +17,8 @@ const (
 
 // Maps to DB table.
 type PasswordReset struct {
-	ID     int
-	UserID int
+	ID     uint
+	UserID uint
 	// Token is only set when a PasswordReset is being created.
 	Token     string
 	TokenHash string
@@ -37,7 +37,7 @@ type PasswordResetService struct {
 func (prs *PasswordResetService) Create(email string) (*PasswordReset, error) {
 	// Verify existence of valid user email, retrieve user ID
 	email = strings.ToLower(email)
-	var userID int
+	var userID uint
 	row := prs.DB.QueryRow(`
 	SELECT id FROM users
 	WHERE email = $1;`, email)
@@ -80,10 +80,48 @@ func (prs *PasswordResetService) Create(email string) (*PasswordReset, error) {
 }
 
 func (prs *PasswordResetService) Consume(token string) (*User, error) {
-	return nil, fmt.Errorf("TODO: implements prs.Consume")
+	// Verify password reset and user.
+	tokenHash := prs.hash(token)
+	var user User
+	var pwReset PasswordReset
+	row := prs.DB.QueryRow(`
+	SELECT password_resets.id,
+		password_resets.expires_at,
+		users.id,
+		users.email,
+		users.password_hash
+	FROM password_resets
+		JOIN users ON users.id = password_resets.user_id
+	WHERE password_resets.token_hash = $1;`, tokenHash)
+
+	if err := row.Scan(
+		&pwReset.ID, &pwReset.ExpiresAt,
+		&user.ID, &user.Email, &user.PasswordHash); err != nil {
+		return nil, fmt.Errorf("consume: %w", err)
+	}
+
+	if time.Now().After(pwReset.ExpiresAt) {
+		return nil, fmt.Errorf("token expired: %v", token)
+	}
+
+	// Password Reset Token is valid, consume.
+	if err := prs.delete(pwReset.ID); err != nil {
+		return nil, fmt.Errorf("consume: %w", err)
+	}
+
+	return &user, nil
 }
 
 func (prs *PasswordResetService) hash(token string) string {
 	tokenHash := sha256.Sum256([]byte(token))
 	return base64.URLEncoding.EncodeToString(tokenHash[:])
+}
+
+func (prs *PasswordResetService) delete(id uint) error {
+	if _, err := prs.DB.Exec(`
+	DELETE FROM password_resets
+	WHERE id = $1;`, id); err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+	return nil
 }
