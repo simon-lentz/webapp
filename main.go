@@ -115,23 +115,27 @@ func main() {
 		)))
 
 	// Register html templates.
-	usersCon.Templates.New = views.Must(views.ParseFS(
+	usersCon.Templates.SignUp = views.Must(views.ParseFS(
 		templates.FS,
-		"signup.html", "tailwind.html",
+		"sign-up.html", "tailwind.html",
 	))
 	usersCon.Templates.SignIn = views.Must(views.ParseFS(
 		templates.FS,
-		"signin.html", "tailwind.html",
+		"sign-in.html", "tailwind.html",
 	))
 	usersCon.Templates.ForgotPassword = views.Must(views.ParseFS(
 		templates.FS,
-		"forgot-pw.html", "tailwind.html",
+		"forgot-password.html", "tailwind.html",
+	))
+	usersCon.Templates.CheckEmail = views.Must(views.ParseFS(
+		templates.FS,
+		"check-email.html", "tailwind.html",
 	))
 
 	// Set up router, associate routes with their respective handler functions.
 	r := chi.NewRouter()
 	r.Use(csrfMw, umw.SetUser)
-	r.Get("/signup", usersCon.New)
+	r.Get("/signup", usersCon.SignUp)
 	r.Post("/users", usersCon.Create)
 	r.Get("/signin", usersCon.SignIn)
 	r.Post("/signin", usersCon.ProcessSignIn)

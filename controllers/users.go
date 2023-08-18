@@ -11,7 +11,7 @@ import (
 
 type Users struct {
 	Templates struct {
-		New            Template // This interfaces takes the place of views.Template
+		SignUp         Template // This interfaces takes the place of views.Template
 		SignIn         Template // SignIn contains logic for an existing user.
 		ForgotPassword Template
 		CheckEmail     Template
@@ -22,12 +22,12 @@ type Users struct {
 	EmailService         *models.EmailService
 }
 
-func (u Users) New(w http.ResponseWriter, r *http.Request) {
+func (u Users) SignUp(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Email string
 	}
 	data.Email = r.FormValue("email")
-	u.Templates.New.Execute(w, r, data)
+	u.Templates.SignUp.Execute(w, r, data)
 }
 
 // Could use gorilla/schema to parse form.
