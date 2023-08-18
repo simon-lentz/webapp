@@ -131,6 +131,10 @@ func main() {
 		templates.FS,
 		"check-email.html", "tailwind.html",
 	))
+	usersCon.Templates.ResetPassword = views.Must(views.ParseFS(
+		templates.FS,
+		"reset-password.html", "tailwind.html",
+	))
 
 	// Set up router, associate routes with their respective handler functions.
 	r := chi.NewRouter()
@@ -145,6 +149,8 @@ func main() {
 	r.Get("/contact", contactCon)
 	r.Get("/forgot-pw", usersCon.ForgotPassword)
 	r.Post("/forgot-pw", usersCon.ProcessForgotPassword)
+	r.Get("/reset-pw", usersCon.ResetPassword)
+	r.Post("/reset-pw", usersCon.ProcessResetPassword)
 	// r.Get("/users/me", usersCon.CurrentUser)
 	// Use subrouting for the context-dependent middleware.
 	r.Route("/users/me", func(r chi.Router) { // Subroute that requires user to be signed in.
