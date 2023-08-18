@@ -31,35 +31,26 @@ func main() {
 		panic(err)
 	}
 
-	// Set up services.
+	// Set up services, associate with user controller.
 	userService := models.UserService{
 		DB: db,
 	}
 	sessionService := models.SessionService{
 		DB: db,
 	}
+	usersCon := controllers.Users{
+		UserService:    &userService,
+		SessionService: &sessionService,
+	}
 
 	// Set up middleware.
 	umw := controllers.UserMiddleware{
 		SessionService: &sessionService,
 	}
-
 	csrfKey := "aInWh37hwuGH5JK8ga1fqjbLhgfANH3Q"
 	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false)) // Fix before deploying.
 
-	// Set up controllers.
-	usersCon := controllers.Users{
-		UserService:    &userService,
-		SessionService: &sessionService,
-	}
-	usersCon.Templates.New = views.Must(views.ParseFS(
-		templates.FS,
-		"signup.html", "tailwind.html",
-	))
-	usersCon.Templates.SignIn = views.Must(views.ParseFS(
-		templates.FS,
-		"signin.html", "tailwind.html",
-	))
+	// Set up controller handler functions.
 	homeCon := controllers.StaticHandler(
 		views.Must(views.ParseFS(
 			templates.FS,
@@ -76,7 +67,21 @@ func main() {
 			"contact.html", "tailwind.html",
 		)))
 
-	// Set up router and routes.
+	// Register html templates.
+	usersCon.Templates.New = views.Must(views.ParseFS(
+		templates.FS,
+		"signup.html", "tailwind.html",
+	))
+	usersCon.Templates.SignIn = views.Must(views.ParseFS(
+		templates.FS,
+		"signin.html", "tailwind.html",
+	))
+	usersCon.Templates.ForgotPassword = views.Must(views.ParseFS(
+		templates.FS,
+		"forgot-pw.html", "tailwind.html",
+	))
+
+	// Set up router, associate routes with their respective handler functions.
 	r := chi.NewRouter()
 	r.Use(csrfMw, umw.SetUser)
 	r.Get("/signup", usersCon.New)
@@ -87,6 +92,10 @@ func main() {
 	r.Get("/", homeCon)
 	r.Get("/about", aboutCon)
 	r.Get("/contact", contactCon)
+	r.Get("/forgot-pw", usersCon.ForgotPassword)
+	r.Post("/forgot-pw", usersCon.ProcessForgotPassword)
+	// r.Get("/users/me", usersCon.CurrentUser)
+	// Use subrouting for the context-dependent middleware.
 	r.Route("/users/me", func(r chi.Router) { // Subroute that requires user to be signed in.
 		r.Use(umw.RequireUser)
 		r.Get("/", usersCon.CurrentUser)

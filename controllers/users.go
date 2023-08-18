@@ -157,7 +157,7 @@ func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
 	vals := url.Values{
 		"token": {pwReset.Token},
 	}
-	resetURL := "https://localhost:3000/reset-pw?" + vals.Encode()
+	resetURL := "localhost:3000/reset-pw?" + vals.Encode()
 	// Implementation of blocking step, see models/email.go.
 	if err = u.EmailService.ForgotPassword(data.Email, resetURL); err != nil {
 		fmt.Println(err)
