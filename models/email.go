@@ -64,6 +64,10 @@ func (es *EmailService) Send(email Email) error {
 	return nil
 }
 
+// Since this call covers a scenario where the email is required for the
+// user to access the app it should not be an async/background email send.
+// The user should not be notified that they were sent a reset link unless
+// the link has been delivered to their inbox.
 func (es *EmailService) ForgotPassword(to, resetURL string) error {
 	email := Email{
 		Subject:   "Reset Password",

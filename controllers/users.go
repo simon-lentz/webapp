@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/simon-lentz/webapp/context"
 	"github.com/simon-lentz/webapp/models"
@@ -10,11 +11,15 @@ import (
 
 type Users struct {
 	Templates struct {
-		New    Template // This interfaces takes the place of views.Template
-		SignIn Template // SignIn contains logic for an existing user.
+		New            Template // This interfaces takes the place of views.Template
+		SignIn         Template // SignIn contains logic for an existing user.
+		ForgotPassword Template
+		CheckEmail     Template
 	}
-	UserService    *models.UserService
-	SessionService *models.SessionService
+	UserService          *models.UserService
+	SessionService       *models.SessionService
+	PasswordResetService *models.PasswordResetService
+	EmailService         *models.EmailService
 }
 
 func (u Users) New(w http.ResponseWriter, r *http.Request) {
@@ -124,6 +129,45 @@ func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 
 	})
+}
+
+// Like: domain.com/forgot-pw?email=address@domain
+func (u Users) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	u.Templates.ForgotPassword.Execute(w, r, data)
+}
+
+func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	pwReset, err := u.PasswordResetService.Create(data.Email)
+	if err != nil {
+		// TODO: Handle edge cases, user does not exist etc.
+		fmt.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	// "/forgot-pw?token=123" won't work on email client, need absolute path.
+	vals := url.Values{
+		"token": {pwReset.Token},
+	}
+	resetURL := "https://localhost:3000/reset-pw?" + vals.Encode()
+	// Implementation of blocking step, see models/email.go.
+	if err = u.EmailService.ForgotPassword(data.Email, resetURL); err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	// Don't render reset token here, wait for user to confirm
+	// they have access to the email account to verify identity.
+	u.Templates.CheckEmail.Execute(w, r, data)
 }
 
 func (umw UserMiddleware) RequireUser(next http.Handler) http.Handler {
