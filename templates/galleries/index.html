@@ -1,5 +1,39 @@
 {{template "header" .}}
 <div class="p-8 w-full">
   <h1 class="pt-4 pb-8 text-3xl font-bold text-gray-800">My Galleries</h1>
+  <table class="w-full table-fixed">
+    <thead>
+      <tr>
+        <th class="p-2 text-left w-24">ID</th>
+        <th class="p-2 text-left">Title</th>
+        <th class="p-2 text-left w-96">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Galleries}}
+      <tr class="border">
+        <td class="p-2 border">{{.ID}}</th>
+        <td class="p-2 border">{{.Title}}</th>
+        <td class="p-2 border flex space-x-2">
+          <a href="/galleries/{{.ID}}"
+          class="py-1 px-2 bg-blue-100 hover:bg-blue-200 rounded border border-gray-950">
+          View</a>
+          <a href="/galleries/{{.ID}}/edit"
+          class="py-1 px-2 bg-blue-100 hover:bg-blue-200 rounded border border-gray-950"
+          >Edit</a>
+          <form action="/galleries/{{.ID}}/delete" method="POST" onsubmit="return confirm('Delete Gallery?');">
+            {{csrfField}}
+            <button type="submit"
+          class="py-1 px-2 bg-red-100 hover:bg-red-200 rounded border border-gray-950"
+          >Delete</button>
+        </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  <div class="py-4">
+    <a href="/galleries/new" class="py-2 px-8 bg-indigo-600 hover:bd-indigo-600 text-white rounded font-bold text-lg">New Gallery</a>
+  </div>
 </div>
 {{template "footer" .}}
