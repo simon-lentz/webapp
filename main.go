@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/csrf"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 	"github.com/simon-lentz/webapp/controllers"
 	"github.com/simon-lentz/webapp/migrations"
 	"github.com/simon-lentz/webapp/models"
@@ -15,13 +18,49 @@ import (
 	"github.com/simon-lentz/webapp/views"
 )
 
+type config struct {
+	PSQL models.PostgresConfig
+	SMTP models.SMTPConfig
+	CSRF struct {
+		Key    string
+		Secure bool
+	}
+	Server struct {
+		Address string
+	}
+}
+
+func loadEnvConfig() (config, error) {
+	var cfg config
+	if err := godotenv.Load(); err != nil {
+		return cfg, err
+	}
+
+	// TODO: PSQL
+	cfg.PSQL = models.DefaultPostgresConfig()
+	// TODO: SMTP
+	cfg.SMTP.Host = os.Getenv("SMTP_HOST")
+	portStr := os.Getenv("SMTP_PORT")
+	cfg.SMTP.Port, _ = strconv.Atoi(portStr) // Should check for error but have to figure out the linting issue.
+	cfg.SMTP.Username = os.Getenv("SMTP_USERNAME")
+	cfg.SMTP.Password = os.Getenv("SMTP_PASSWORD")
+	// TODO: CSRF
+	cfg.CSRF.Key = "aInWh37hwuGH5JK8ga1fqjbLhgfANH3Q"
+	cfg.CSRF.Secure = false
+	// TODO: Read the server values from an ENV variable
+	cfg.Server.Address = ":3000"
+	return cfg, nil
+}
 func main() {
+	cfg, err := loadEnvConfig()
+	if err != nil {
+		panic(err)
+	}
 	log := controllers.NewLogger()
 
 	// Set up DB.
-	cfg := models.DefaultPostgresConfig()
-	fmt.Println(cfg.String())
-	db, err := models.Open(cfg)
+	// fmt.Println(cfg.PSQL.String())
+	db, err := models.Open(cfg.PSQL)
 	if err != nil {
 		panic(err)
 	}
@@ -31,24 +70,32 @@ func main() {
 		panic(err)
 	}
 
-	// Set up services, associate with user controller.
-	userService := models.UserService{
+	// Set up services.
+	userService := &models.UserService{
 		DB: db,
 	}
-	sessionService := models.SessionService{
+	sessionService := &models.SessionService{
 		DB: db,
 	}
+	pwResetService := &models.PasswordResetService{
+		DB: db,
+	}
+	emailService, _ := models.NewEmailService(cfg.SMTP)
+
+	// Assign services to users controller.
 	usersCon := controllers.Users{
-		UserService:    &userService,
-		SessionService: &sessionService,
+		UserService:          userService,
+		SessionService:       sessionService,
+		PasswordResetService: pwResetService,
+		EmailService:         emailService,
 	}
 
 	// Set up middleware.
 	umw := controllers.UserMiddleware{
-		SessionService: &sessionService,
+		SessionService: sessionService,
 	}
-	csrfKey := "aInWh37hwuGH5JK8ga1fqjbLhgfANH3Q"
-	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false)) // Fix before deploying.
+
+	csrfMw := csrf.Protect([]byte(cfg.CSRF.Key), csrf.Secure(cfg.CSRF.Secure)) // Fix before deploying.
 
 	// Set up controller handler functions.
 	homeCon := controllers.StaticHandler(
@@ -105,8 +152,8 @@ func main() {
 	})
 
 	// Start server.
-	fmt.Println("Starting server on :3000...")
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	fmt.Printf("Starting server on %s...\n", cfg.Server.Address)
+	if err := http.ListenAndServe(cfg.Server.Address, r); err != nil {
 		log.Debug("http.ListenAndServe failed", slog.Any("err", err))
 	}
 }
