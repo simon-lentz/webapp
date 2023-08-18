@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path"
 
 	"github.com/gorilla/csrf"
 	"github.com/simon-lentz/webapp/context"
@@ -29,7 +30,8 @@ func Must(t Template, err error) Template {
 
 // ParseFS retrieves and parses embedded html templates.
 func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
-	tmpl := template.New(patterns[0]) // For csrf template function called in html.
+	// Here, path.Base allows ParseFS to fetch nested embedded files.
+	tmpl := template.New(path.Base(patterns[0])) // For csrf template function called in html.
 
 	tmpl = tmpl.Funcs(
 		template.FuncMap{

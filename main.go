@@ -78,13 +78,19 @@ func main() {
 		DB: db,
 	}
 	emailService, _ := models.NewEmailService(cfg.SMTP)
+	galleryService := &models.GalleryService{
+		DB: db,
+	}
 
-	// Assign services to users controller.
+	// Assign services to controllers.
 	usersCon := controllers.Users{
 		UserService:          userService,
 		SessionService:       sessionService,
 		PasswordResetService: pwResetService,
 		EmailService:         emailService,
+	}
+	galleriesCon := controllers.Galleries{
+		GalleryService: galleryService,
 	}
 
 	// Set up middleware.
@@ -132,6 +138,10 @@ func main() {
 		templates.FS,
 		"reset-password.html", "tailwind.html",
 	))
+	galleriesCon.Templates.New = views.Must(views.ParseFS(
+		templates.FS,
+		"galleries/new.html", "tailwind.html",
+	))
 
 	// Set up router, associate routes with their respective handler functions.
 	r := chi.NewRouter()
@@ -148,12 +158,12 @@ func main() {
 	r.Post("/forgot-pw", usersCon.ProcessForgotPassword)
 	r.Get("/reset-pw", usersCon.ResetPassword)
 	r.Post("/reset-pw", usersCon.ProcessResetPassword)
-	// r.Get("/users/me", usersCon.CurrentUser)
 	// Use subrouting for the context-dependent middleware.
 	r.Route("/users/me", func(r chi.Router) { // Subroute that requires user to be signed in.
 		r.Use(umw.RequireUser)
 		r.Get("/", usersCon.CurrentUser)
 	})
+	r.Get("/galleries/new", galleriesCon.New)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 	})
