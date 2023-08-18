@@ -15,6 +15,7 @@ type Users struct {
 		SignIn         Template // SignIn contains logic for an existing user.
 		ForgotPassword Template
 		CheckEmail     Template
+		ResetPassword  Template
 	}
 	UserService          *models.UserService
 	SessionService       *models.SessionService
@@ -107,30 +108,6 @@ func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/signin", http.StatusFound)
 }
 
-type UserMiddleware struct {
-	SessionService *models.SessionService
-}
-
-func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := readCookie(r, CookieSession)
-		if err != nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-		user, err := umw.SessionService.User(token)
-		if err != nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-		ctx := r.Context()
-		ctx = context.WithUser(ctx, user)
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
-
-	})
-}
-
 // Like: domain.com/forgot-pw?email=address@domain
 func (u Users) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var data struct {
@@ -168,6 +145,67 @@ func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
 	// Don't render reset token here, wait for user to confirm
 	// they have access to the email account to verify identity.
 	u.Templates.CheckEmail.Execute(w, r, data)
+}
+
+func (u Users) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Token string
+	}
+	data.Token = r.FormValue("token")
+	u.Templates.ResetPassword.Execute(w, r, data)
+}
+
+func (u Users) ProcessResetPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Token    string
+		Password string
+	}
+	data.Token = r.FormValue("token")
+	data.Password = r.FormValue("password")
+	user, err := u.PasswordResetService.Consume(data.Token)
+	if err != nil {
+		fmt.Println(err)
+		// TODO: better error handling.
+		http.Error(w, "Somthing went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: Update user's pw
+	//		 Sign the user in after reset
+	// 	     Newly raised errors redirect to sign in page
+
+	session, err := u.SessionService.Create(user.ID)
+	if err != nil {
+		fmt.Println(err)
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+	setCookie(w, CookieSession, session.Token)
+	http.Redirect(w, r, "/signin", http.StatusFound)
+}
+
+type UserMiddleware struct {
+	SessionService *models.SessionService
+}
+
+func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := readCookie(r, CookieSession)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		user, err := umw.SessionService.User(token)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		ctx := r.Context()
+		ctx = context.WithUser(ctx, user)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+
+	})
 }
 
 func (umw UserMiddleware) RequireUser(next http.Handler) http.Handler {
