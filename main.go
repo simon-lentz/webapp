@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -56,8 +55,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log := controllers.NewLogger()
-
 	// Set up DB.
 	// fmt.Println(cfg.PSQL.String())
 	db, err := models.Open(cfg.PSQL)
@@ -164,6 +161,6 @@ func main() {
 	// Start server.
 	fmt.Printf("Starting server on %s...\n", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, r); err != nil {
-		log.Debug("http.ListenAndServe failed", slog.Any("err", err))
+		fmt.Printf("server: %v", err)
 	}
 }
