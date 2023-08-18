@@ -77,3 +77,24 @@ func (service *GalleryService) ByUserID(userID uint) ([]Gallery, error) {
 
 	return galleries, nil
 }
+
+func (service *GalleryService) Update(gallery *Gallery) error {
+	if _, err := service.DB.Exec(`
+	UPDATE galleries
+	SET title = $2
+	WHERE id = $1;`, gallery.ID, gallery.Title); err != nil {
+		return fmt.Errorf("update: %w", err)
+	}
+
+	return nil
+}
+
+func (service *GalleryService) Delete(id uint) error {
+	if _, err := service.DB.Exec(`
+	DELETE FROM galleries
+	WHERE id = $1;`, id); err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+
+	return nil
+}
