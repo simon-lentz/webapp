@@ -207,14 +207,14 @@ func (g Galleries) UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fileHeaders := r.MultipartForm.File["images"]
-	for _, header := range fileHeaders {
-		file, err := header.Open()
+	for _, fileHeader := range fileHeaders {
+		file, err := fileHeader.Open()
 		if err != nil {
 			http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
 			return
 		}
 		defer file.Close()
-		if err = g.GalleryService.CreateImage(gallery.ID, header.Filename, file); err != nil {
+		if err = g.GalleryService.CreateImage(gallery.ID, fileHeader.Filename, file); err != nil {
 			http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
 			return
 		}

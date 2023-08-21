@@ -184,13 +184,13 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(umw.RequireUser) // Must be signed in to access these routes.
 			r.Get("/", galleriesCon.Index)
-			r.Get("/new", galleriesCon.New)
-			r.Get("/{id}/edit", galleriesCon.Edit)
 			r.Post("/", galleriesCon.Create)
+			r.Get("/new", galleriesCon.New)
 			r.Post("/{id}", galleriesCon.Update)
+			r.Get("/{id}/edit", galleriesCon.Edit)
+			r.Post("/{id}/images", galleriesCon.UploadImage)
 			r.Post("/{id}/delete", galleriesCon.Delete)
-			r.Post("/{id}/images", galleriesCon.DeleteImage)
-			r.Post("/{id}/images/{filename}/upload", galleriesCon.UploadImage)
+			r.Post("/{id}/images/{filename}/delete", galleriesCon.DeleteImage)
 		})
 
 	})
