@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -93,6 +94,19 @@ func (g Galleries) Update(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, editPath, http.StatusFound)
 }
 
+func (g Galleries) DeleteImage(w http.ResponseWriter, r *http.Request) {
+	filename := chi.URLParam(r, "filename")
+	gallery, err := g.galleryByID(w, r, userMustOwnGalleryOpt)
+	if err != nil {
+		return
+	}
+	if err = g.GalleryService.DeleteImage(gallery.ID, filename); err != nil {
+		http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
+		return
+	}
+	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
+	http.Redirect(w, r, editPath, http.StatusFound)
+}
 func (g Galleries) Index(w http.ResponseWriter, r *http.Request) {
 	// The new type is helpful in case client side rendering diverges from server side representation.
 	type Gallery struct {
@@ -164,7 +178,7 @@ func (g Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g Galleries) Image(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
+	filename := g.filename(w, r)
 	galleryID, err := strconv.Atoi(chi.URLParam(r, "id")) //ascii to int
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
@@ -217,4 +231,11 @@ func userMustOwnGalleryOpt(w http.ResponseWriter, r *http.Request, gallery *mode
 		return fmt.Errorf("Resource Not Found")
 	}
 	return nil
+}
+
+// Prevent url injection by trimming to base path.
+func (g Galleries) filename(w http.ResponseWriter, r *http.Request) string {
+	filePath := chi.URLParam(r, "filename")
+	fileName := filepath.Base(filePath)
+	return fileName
 }
