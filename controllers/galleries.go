@@ -51,9 +51,7 @@ func (g Galleries) Edit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	user := context.User(r.Context())
-	if gallery.UserID != user.ID {
-		http.Error(w, "Gallery Not Found", http.StatusNotFound)
+	if err = userMustOwnGallery(w, r, gallery); err != nil {
 		return
 	}
 	var data struct {
@@ -70,9 +68,7 @@ func (g Galleries) Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	user := context.User(r.Context())
-	if gallery.UserID != user.ID {
-		http.Error(w, "Gallery Not Found", http.StatusNotFound)
+	if err = userMustOwnGallery(w, r, gallery); err != nil {
 		return
 	}
 	gallery.Title = r.FormValue("title")
@@ -145,4 +141,13 @@ func (g Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models.
 		return nil, err
 	}
 	return gallery, nil
+}
+
+func userMustOwnGallery(w http.ResponseWriter, r *http.Request, gallery *models.Gallery) error {
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Resource Not Found", http.StatusNotFound)
+		return fmt.Errorf("Resource Not Found")
+	}
+	return nil
 }
