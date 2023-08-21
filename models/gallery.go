@@ -191,7 +191,7 @@ func (service *GalleryService) extensions() []string {
 }
 
 func (service *GalleryService) imageContentTypes() []string {
-	return []string{"image/png", "image/jpg", "image/gif"}
+	return []string{"image/png", "image/jpg", "image/gif", "image/jpeg"}
 }
 
 func (service *GalleryService) galleryDir(id uint) string {
