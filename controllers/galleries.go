@@ -119,6 +119,17 @@ func (g Galleries) Show(w http.ResponseWriter, r *http.Request) {
 	g.Templates.Show.Execute(w, r, data)
 }
 
+func (g Galleries) Delete(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r, userMustOwnGalleryOpt)
+	if err != nil {
+		return
+	}
+	if err = g.GalleryService.Delete(gallery.ID); err != nil {
+		http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
+		return
+	}
+}
+
 // Combine with functional options pattern.
 func (g Galleries) galleryByID(w http.ResponseWriter, r *http.Request, opts ...galleryOpt) (*models.Gallery, error) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
