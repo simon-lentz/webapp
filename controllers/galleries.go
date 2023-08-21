@@ -197,6 +197,32 @@ func (g Galleries) Image(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, image.Path)
 }
 
+func (g Galleries) UploadImage(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r, userMustOwnGalleryOpt)
+	if err != nil {
+		return
+	}
+	if err = r.ParseMultipartForm(5 << 20); err != nil { // 5mb
+		http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
+		return
+	}
+	fileHeaders := r.MultipartForm.File["images"]
+	for _, header := range fileHeaders {
+		file, err := header.Open()
+		if err != nil {
+			http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		if err = g.GalleryService.CreateImage(gallery.ID, header.Filename, file); err != nil {
+			http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
+			return
+		}
+	}
+	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
+	http.Redirect(w, r, editPath, http.StatusFound)
+}
+
 type galleryOpt func(http.ResponseWriter, *http.Request, *models.Gallery) error
 
 // Combine with functional options pattern.

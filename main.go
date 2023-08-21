@@ -189,7 +189,8 @@ func main() {
 			r.Post("/", galleriesCon.Create)
 			r.Post("/{id}", galleriesCon.Update)
 			r.Post("/{id}/delete", galleriesCon.Delete)
-			r.Post("/{id}/images/{filename}/delete", galleriesCon.DeleteImage)
+			r.Post("/{id}/images", galleriesCon.DeleteImage)
+			r.Post("/{id}/images/{filename}/upload", galleriesCon.UploadImage)
 		})
 
 	})

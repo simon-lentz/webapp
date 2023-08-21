@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -133,7 +134,8 @@ func (service *GalleryService) Images(galleryID uint) ([]Image, error) {
 }
 
 func (service *GalleryService) Image(galleryID uint, filename string) (Image, error) {
-	imagePath := filepath.Join(service.galleryDir(galleryID), filename)
+	galleryDir := service.galleryDir(galleryID)
+	imagePath := filepath.Join(galleryDir, filename)
 	_, err := os.Stat(imagePath)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -146,6 +148,23 @@ func (service *GalleryService) Image(galleryID uint, filename string) (Image, er
 		GalleryID: galleryID,
 		Path:      imagePath,
 	}, nil
+}
+
+func (service *GalleryService) CreateImage(galleryID uint, filename string, contents io.Reader) error {
+	galleryDir := service.galleryDir(galleryID)
+	if err := os.MkdirAll(galleryDir, 0755); err != nil { // make sure directory exists and is accessible
+		return fmt.Errorf("create gallery-%d image directory: %w", galleryID, err)
+	}
+	imagePath := filepath.Join(galleryDir, filename)
+	dst, err := os.Create(imagePath)
+	if err != nil {
+		return fmt.Errorf("creating image file: %w", err)
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, contents); err != nil {
+		return fmt.Errorf("copying to image file: %w", err)
+	}
+	return nil
 }
 
 func (service *GalleryService) DeleteImage(galleryID uint, filename string) error {
