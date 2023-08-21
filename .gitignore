@@ -2,3 +2,5 @@
 tempbuild
 # Env variables
 .env
+# test artifacts
+images/
