@@ -128,6 +128,7 @@ func (g Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
 		return
 	}
+	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
 // Combine with functional options pattern.
