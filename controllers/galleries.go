@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -50,12 +51,31 @@ func (g Galleries) Edit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	type Image struct {
+		GalleryID       uint
+		Filename        string
+		FilenameEscaped string
+	}
 	var data struct {
-		ID    uint
-		Title string
+		ID     uint
+		Title  string
+		Images []Image
 	}
 	data.ID = gallery.ID
 	data.Title = gallery.Title
+	images, err := g.GalleryService.Images(gallery.ID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
+		return
+	}
+	for _, image := range images {
+		data.Images = append(data.Images, Image{
+			GalleryID:       image.GalleryID,
+			Filename:        image.Filename,
+			FilenameEscaped: url.PathEscape(image.Filename),
+		})
+	}
 	g.Templates.Edit.Execute(w, r, data)
 }
 
@@ -105,6 +125,8 @@ func (g Galleries) Show(w http.ResponseWriter, r *http.Request) {
 	type Image struct {
 		GalleryID uint
 		Filename  string
+		// URL safe filename
+		FilenameEscaped string
 	}
 	var data struct {
 		ID     uint
@@ -121,8 +143,9 @@ func (g Galleries) Show(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, image := range images {
 		data.Images = append(data.Images, Image{
-			GalleryID: image.GalleryID,
-			Filename:  image.Filename,
+			GalleryID:       image.GalleryID,
+			Filename:        image.Filename,
+			FilenameEscaped: url.PathEscape(image.Filename),
 		})
 	}
 	g.Templates.Show.Execute(w, r, data)
@@ -144,31 +167,20 @@ func (g Galleries) Image(w http.ResponseWriter, r *http.Request) {
 	filename := chi.URLParam(r, "filename")
 	galleryID, err := strconv.Atoi(chi.URLParam(r, "id")) //ascii to int
 	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Image Not Found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Invalid ID", http.StatusNotFound)
 		return
 	}
-	images, err := g.GalleryService.Images(uint(galleryID))
+	image, err := g.GalleryService.Image(uint(galleryID), filename)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Something Went Wrong", http.StatusInternalServerError)
 		return
 	}
-	var requestedImage models.Image
-	imageFound := false
-	for _, image := range images {
-		fmt.Println(image.Filename)
-		fmt.Println(image.GalleryID)
-		fmt.Println(image.Path)
-		if image.Filename == filename {
-			requestedImage = image
-			imageFound = true
-			break
-		}
-	}
-	if !imageFound {
-		http.Error(w, "Image Not Found", http.StatusNotFound)
-	}
-	http.ServeFile(w, r, requestedImage.Path)
+	http.ServeFile(w, r, image.Path)
 }
 
 type galleryOpt func(http.ResponseWriter, *http.Request, *models.Gallery) error

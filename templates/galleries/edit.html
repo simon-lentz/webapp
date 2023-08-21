@@ -26,6 +26,22 @@
     </div>
   </form>
   <div class="py-4">
+    <h2 class="pb-2 text-sm font-semibold text-gray-800">Current Images</h2>
+    <div class="py-2 grid grid-cols-8 gap-2">
+      {{range .Images}}
+      <div class="h-min w-full relative">
+        <div class="absolute top-2 right-2">
+          {{template "delete_image_form" .}}
+        </div>
+        <img
+          class="w-full"
+          src="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}"
+        />
+      </div>
+      {{end}}
+    </div>
+  </div>
+  <div class="py-4">
     <!--Dangerous Actions-->
     <h2>Dangerous Actions</h2>
     <form
@@ -44,3 +60,19 @@
   </div>
 </div>
 {{template "footer" .}}
+<!---->
+{{define "delete_image_form"}}
+<form
+  action="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}/delete"
+  method="POST"
+  onsubmit="return confirm('Delete Image?');"
+>
+  {{csrfField}}
+  <button
+    type="submit"
+    class="p-1 text-xs text-red-400 border border-red-800 rounded"
+  >
+    Delete
+  </button>
+</form>
+{{end}}
