@@ -180,6 +180,7 @@ func main() {
 	})
 	r.Route("/galleries", func(r chi.Router) {
 		r.Get("/{id}", galleriesCon.Show) // Public access route.
+		r.Get("/{id}/images/{filename}", galleriesCon.Image)
 		r.Group(func(r chi.Router) {
 			r.Use(umw.RequireUser) // Must be signed in to access these routes.
 			r.Get("/", galleriesCon.Index)
