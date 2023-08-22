@@ -52,24 +52,16 @@ func loadEnvConfig() (config, error) {
 	cfg.Server.Address = os.Getenv("SERVER_ADDRESS")
 	return cfg, nil
 }
-func main() {
-	cfg, err := loadEnvConfig()
-	if err != nil {
-		panic(err)
-	}
-	// Set up DB.
-	// fmt.Println(cfg.PSQL.String())
+
+func run(cfg config) error {
 	db, err := models.Open(cfg.PSQL)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
-
 	if err = models.MigrateFS(db, migrations.FS, "."); err != nil {
-		panic(err)
+		return err
 	}
-
-	// Set up services.
 	userService := &models.UserService{
 		DB: db,
 	}
@@ -83,8 +75,6 @@ func main() {
 	galleryService := &models.GalleryService{
 		DB: db,
 	}
-
-	// Assign services to controllers.
 	usersCon := controllers.Users{
 		UserService:          userService,
 		SessionService:       sessionService,
@@ -94,18 +84,13 @@ func main() {
 	galleriesCon := controllers.Galleries{
 		GalleryService: galleryService,
 	}
-
-	// Set up middleware.
 	umw := controllers.UserMiddleware{
 		SessionService: sessionService,
 	}
-
 	csrfMw := csrf.Protect(
 		[]byte(cfg.CSRF.Key),
 		csrf.Secure(cfg.CSRF.Secure),
 		csrf.Path("/"))
-
-	// Set up controller handler functions.
 	homeCon := controllers.StaticHandler(
 		views.Must(views.ParseFS(
 			templates.FS,
@@ -121,8 +106,6 @@ func main() {
 			templates.FS,
 			"contact.html", "tailwind.html",
 		)))
-
-	// Register html templates.
 	usersCon.Templates.SignUp = views.Must(views.ParseFS(
 		templates.FS,
 		"sign-up.html", "tailwind.html",
@@ -159,8 +142,6 @@ func main() {
 		templates.FS,
 		"galleries/show.html", "tailwind.html",
 	))
-
-	// Set up router, associate routes with their respective handler functions.
 	r := chi.NewRouter()
 	r.Use(csrfMw, umw.SetUser)
 	r.Get("/signup", usersCon.SignUp)
@@ -175,11 +156,6 @@ func main() {
 	r.Post("/forgot-pw", usersCon.ProcessForgotPassword)
 	r.Get("/reset-pw", usersCon.ResetPassword)
 	r.Post("/reset-pw", usersCon.ProcessResetPassword)
-	// Use subrouting for the context-dependent middleware.
-	r.Route("/users/me", func(r chi.Router) { // Subroute that requires user to be signed in.
-		r.Use(umw.RequireUser)
-		r.Get("/", usersCon.CurrentUser)
-	})
 	r.Route("/galleries", func(r chi.Router) {
 		r.Get("/{id}", galleriesCon.Show) // Public access route.
 		r.Get("/{id}/images/{filename}", galleriesCon.Image)
@@ -201,10 +177,16 @@ func main() {
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 	})
-
-	// Start server.
 	fmt.Printf("Starting server on %s...\n", cfg.Server.Address)
-	if err := http.ListenAndServe(cfg.Server.Address, r); err != nil {
-		fmt.Printf("server: %v", err)
+	return http.ListenAndServe(cfg.Server.Address, r)
+}
+
+func main() {
+	cfg, err := loadEnvConfig()
+	if err != nil {
+		panic(err)
+	}
+	if err = run(cfg); err != nil {
+		panic(err)
 	}
 }
