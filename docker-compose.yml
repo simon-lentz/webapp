@@ -1,24 +1,10 @@
 version: "4.22"
 
 services:
-  # Postgres database
   db:
     image: postgres
     restart: always
     environment:
-      POSTGRES_USER: temp
-      POSTGRES_PASSWORD: pmet
-      POSTGRES_DB: webapp
-    ports:
-      - 5432:5432
-
-  # Adminer web UI for database
-  adminer:
-    image: adminer
-    restart: always
-    environment:
-      ADMINER_DESIGN: dracula
-      # localhost:3333 opens the dracula themed gui
-      # CLI: docker compose exec -it db psql -U temp -d webapp
-    ports:
-      - 3333:8080
+      POSTGRES_USER: ${PSQL_USER}
+      POSTGRES_PASSWORD: ${PSQL_PASSWORD}
+      POSTGRES_DB: ${PSQL_DATABASE}
