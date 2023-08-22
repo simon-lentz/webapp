@@ -4,3 +4,5 @@ tempbuild
 .env
 # test artifacts
 images/
+# node stuff
+node_modules/
