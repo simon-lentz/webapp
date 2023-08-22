@@ -34,20 +34,22 @@ func loadEnvConfig() (config, error) {
 	if err := godotenv.Load(); err != nil {
 		return cfg, err
 	}
-
-	// TODO: PSQL
-	cfg.PSQL = models.DefaultPostgresConfig()
-	// TODO: SMTP
+	cfg.PSQL = models.PostgresConfig{
+		Host:     os.Getenv("PSQL_HOST"),
+		Port:     os.Getenv("PSQL_PORT"),
+		User:     os.Getenv("PSQL_USER"),
+		Password: os.Getenv("PSQL_PASSWORD"),
+		Database: os.Getenv("PSQL_DATABASE"),
+		SSLMode:  os.Getenv("PSQL_SSLMODE"),
+	}
 	cfg.SMTP.Host = os.Getenv("SMTP_HOST")
 	portStr := os.Getenv("SMTP_PORT")
-	cfg.SMTP.Port, _ = strconv.Atoi(portStr) // Should check for error but have to figure out the linting issue.
+	cfg.SMTP.Port, _ = strconv.Atoi(portStr)
 	cfg.SMTP.Username = os.Getenv("SMTP_USERNAME")
 	cfg.SMTP.Password = os.Getenv("SMTP_PASSWORD")
-	// TODO: CSRF
-	cfg.CSRF.Key = "aInWh37hwuGH5JK8ga1fqjbLhgfANH3Q"
-	cfg.CSRF.Secure = false
-	// TODO: Read the server values from an ENV variable
-	cfg.Server.Address = ":3000"
+	cfg.CSRF.Key = os.Getenv("CSRF_KEY") // 32-byte string
+	cfg.CSRF.Secure = os.Getenv("CSRF_SECURE") == "true"
+	cfg.Server.Address = os.Getenv("SERVER_ADDRESS")
 	return cfg, nil
 }
 func main() {
