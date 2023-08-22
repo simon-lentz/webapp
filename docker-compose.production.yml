@@ -1,0 +1,14 @@
+version: "4.22"
+
+services:
+  server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./images:/app/images
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
